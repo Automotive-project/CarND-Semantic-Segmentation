@@ -33,7 +33,8 @@ def maybe_download_pretrained_vgg(data_dir):
         os.path.join(vgg_path, 'variables/variables.index'),
         os.path.join(vgg_path, 'saved_model.pb')]
 
-    missing_vgg_files = [vgg_file for vgg_file in vgg_files if not os.path.exists(vgg_file)]
+    missing_vgg_files = [
+        vgg_file for vgg_file in vgg_files if not os.path.exists(vgg_file)]
     if missing_vgg_files:
         # Clean vgg dir
         if os.path.exists(vgg_path):
@@ -81,11 +82,13 @@ def gen_batch_function(data_folder, image_shape):
         for batch_i in range(0, len(image_paths), batch_size):
             images = []
             gt_images = []
-            for image_file in image_paths[batch_i:batch_i+batch_size]:
+            for image_file in image_paths[batch_i:batch_i + batch_size]:
                 gt_image_file = label_paths[os.path.basename(image_file)]
 
-                image = scipy.misc.imresize(scipy.misc.imread(image_file), image_shape)
-                gt_image = scipy.misc.imresize(scipy.misc.imread(gt_image_file), image_shape)
+                image = scipy.misc.imresize(
+                    scipy.misc.imread(image_file), image_shape)
+                gt_image = scipy.misc.imresize(
+                    scipy.misc.imread(gt_image_file), image_shape)
 
                 gt_bg = np.all(gt_image == background_color, axis=2)
                 gt_bg = gt_bg.reshape(*gt_bg.shape, 1)
@@ -115,8 +118,10 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
         im_softmax = sess.run(
             [tf.nn.softmax(logits)],
             {keep_prob: 1.0, image_pl: [image]})
-        im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
-        segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
+        im_softmax = im_softmax[0][:, 1].reshape(
+            image_shape[0], image_shape[1])
+        segmentation = (im_softmax > 0.5).reshape(
+            image_shape[0], image_shape[1], 1)
         mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
         mask = scipy.misc.toimage(mask, mode="RGBA")
         street_im = scipy.misc.toimage(image)
