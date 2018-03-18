@@ -5,7 +5,6 @@ import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
 
-
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion(
     '1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -136,6 +135,7 @@ def run():
     save_model = True
     restore_model = True
     inferance_only = False
+    compute_iou = True
 
     num_classes = 2
     image_shape = (160, 576)
@@ -163,8 +163,15 @@ def run():
         logits, optimizer, cross_entropy_loss = optimize(tensor, correct_label, learning_rate,
                                                          num_classes)
 
+        if compute_iou:
+            predictions = tf.argmax(tf.nn.softmax(tensor), axis=-1)
+            gt = tf.argmax(correct_label, axis=-1)
+            mean_iou, iou_update_op = tf.metrics.mean_iou(
+                gt, predictions, num_classes)
+
         sess.run(tf.global_variables_initializer())
-    
+        sess.run(tf.local_variables_initializer())
+
         saver = tf.train.Saver()
         restore_path = tf.train.latest_checkpoint('./ckpts/')
         if restore_path and restore_model:
@@ -174,6 +181,18 @@ def run():
         if not inferance_only:
             train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
                      correct_label, keep_prob, learning_rate)
+
+        #compute mean_iou on traning images
+        if compute_iou:
+            print("Computing IOU...")
+            mean_ious = []
+            for image, label in (get_batches_fn(batches)):
+                sess.run([predictions, iou_update_op], feed_dict={
+                    input_image: image, correct_label: label, keep_prob: 1})
+                # Avoiding headaches
+                # http://ronny.rest/blog/post_2017_09_11_tf_metrics/
+                mean_ious.append(sess.run(mean_iou))
+            print("Mean IOU: {:.3f}".format(sum(mean_ious) / len(mean_ious)))
 
         if save_model:
             save_path = saver.save(sess, "./ckpts/model.ckpt")
