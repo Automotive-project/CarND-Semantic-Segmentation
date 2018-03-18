@@ -119,7 +119,6 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
     """
-    sess.run(tf.global_variables_initializer())
     for e in range(epochs):
         for i, (image, label) in enumerate(get_batches_fn(batch_size)):
             _, loss = sess.run(
@@ -134,6 +133,9 @@ tests.test_train_nn(train_nn)
 def run():
     batches = 2
     epochs = 80
+    save_model = True
+    restore_model = True
+    inferance_only = False
 
     num_classes = 2
     image_shape = (160, 576)
@@ -161,8 +163,21 @@ def run():
         logits, optimizer, cross_entropy_loss = optimize(tensor, correct_label, learning_rate,
                                                          num_classes)
 
-        train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
-                 correct_label, keep_prob, learning_rate)
+        sess.run(tf.global_variables_initializer())
+    
+        saver = tf.train.Saver()
+        restore_path = tf.train.latest_checkpoint('./ckpts/')
+        if restore_path and restore_model:
+            print("Resotring model from: %s " % restore_path)
+            saver.restore(sess, restore_path)
+
+        if not inferance_only:
+            train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
+                     correct_label, keep_prob, learning_rate)
+
+        if save_model:
+            save_path = saver.save(sess, "./ckpts/model.ckpt")
+            print("Model saved in path: %s" % save_path)
 
         helper.save_inference_samples(
             runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
