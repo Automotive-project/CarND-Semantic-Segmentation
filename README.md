@@ -35,10 +35,12 @@ python main.py
 ```
 ##### Results
 
-![sample](./runs/1520094068.630133/um_000003.png)
-![sample](./runs/1520094068.630133/um_000005.png)
-![sample](./runs/1520094068.630133/um_000007.png)
-![sample](./runs/1520094068.630133/um_000013.png)
+###### Mean IOU: 0.960
+
+![sample](./runs/1521580880.289971/um_000003.png)
+![sample](./runs/1521580880.289971/um_000005.png)
+![sample](./runs/1521580880.289971/um_000007.png)
+![sample](./runs/1521580880.289971/um_000013.png)
 
 #### Tips
 - The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
