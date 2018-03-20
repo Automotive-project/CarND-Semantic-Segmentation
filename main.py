@@ -7,7 +7,9 @@ from distutils.version import LooseVersion
 import project_tests as tests
 import scipy.misc
 from glob import glob
+from moviepy.editor import VideoFileClip
 
+    
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion(
     '1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -137,7 +139,7 @@ def run():
     epochs = 80
     save_model = True
     restore_model = True
-    inferance_only = False
+    training = True
     compute_iou = True
     save_inference_samples = True
 
@@ -182,7 +184,7 @@ def run():
             print("Resotring model from: %s " % restore_path)
             saver.restore(sess, restore_path)
 
-        if not inferance_only:
+        if training:
             train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
                      correct_label, keep_prob, learning_rate)
 
@@ -211,13 +213,21 @@ def run():
         processor = ImageProcessor.ImageProcessor(
            image_shape, sess, logits, keep_prob, input_image)
         for idx, image_file in enumerate(glob("./test_images/*.jpg")):
-            image = scipy.misc.imresize(
-                scipy.misc.imread(image_file), image_shape)
+            image = scipy.misc.imread(image_file)
             image = processor.process_image(image)
             scipy.misc.imsave(os.path.join(
                 "output_images", str(idx) + ".png"), image)
+        
+        print("Processing test video...")    
+        videoname = 'test_video'
+        output_file = videoname + '_output.mp4'
+        input_file  = videoname + '.mp4'
+        
+        clip = VideoFileClip(input_file)
+        video_clip = clip.fl_image(processor.process_image)
+        video_clip.write_videofile(output_file, audio=False)
+        
         print("Done.")
-
 
 if __name__ == '__main__':
     run()

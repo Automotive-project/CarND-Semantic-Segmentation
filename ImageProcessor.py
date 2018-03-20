@@ -34,6 +34,8 @@ class ImageProcessor(object):
         image_pl = self.input_image
         image_shape = self.image_shape
 
+        image = scipy.misc.imresize(image, image_shape)
+            
         im_softmax = sess.run(
             [tf.nn.softmax(logits)],
             {keep_prob: 1.0, image_pl: [image]})
