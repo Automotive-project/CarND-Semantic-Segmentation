@@ -9,7 +9,6 @@ import scipy.misc
 from glob import glob
 from moviepy.editor import VideoFileClip
 
-    
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion(
     '1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -61,6 +60,11 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :param num_classes: Number of classes to classify
     :return: The Tensor for the last layer of tensor
     """
+    # Outputs of pooling layers 3 and 4 are scaled before they are fed into
+    # the 1x1 convolutions.
+    vgg_layer3_out = tf.multiply(vgg_layer3_out, 0.0001)
+    vgg_layer4_out = tf.multiply(vgg_layer4_out, 0.01)
+
     regularizer = tf.contrib.layers.l2_regularizer(1e-3)
     conv_1x1_l3 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same',
                                    kernel_regularizer=regularizer)
@@ -99,6 +103,16 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     cross_entropy_loss = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
 
+    '''
+    When adding l2-regularization, setting a regularizer in the arguments of 
+    the tf.layers is not enough. Regularization loss terms must be manually 
+    added to your loss function. otherwise regularization is not implemented.
+    '''
+    regularization_losses = tf.get_collection(
+        tf.GraphKeys.REGULARIZATION_LOSSES)
+
+    cross_entropy_loss = tf.add(cross_entropy_loss, sum(regularization_losses))
+
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(cross_entropy_loss)
 
@@ -109,7 +123,7 @@ tests.test_optimize(optimize)
 
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
-             correct_label, keep_prob, learning_rate):
+             correct_label, keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -123,22 +137,24 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
     """
-    for e in range(epochs):
-        for i, (image, label) in enumerate(get_batches_fn(batch_size)):
+
+    for step in range(epochs):
+        for image, label in (get_batches_fn(batch_size)):
             _, loss = sess.run(
                 [train_op, cross_entropy_loss], feed_dict={input_image: image, correct_label: label,
                                                            keep_prob: 0.5, learning_rate: 1e-4})
-            print('Epoch: {} batch: {} loss: {:.3f}'.format(e + 1, i + 1, loss))
+        print('Epoch: {} loss: {:.3f}'.format(step + 1, loss))
+        if saver and step % 5 == 0:
+            saver.save(sess, "./ckpts/model.ckpt", global_step=step)
 
 
 tests.test_train_nn(train_nn)
 
 
 def run():
-    batches = 2
+    batches = 8
     epochs = 80
-    save_model = True
-    restore_model = True
+    restore_model = False
     training = True
     compute_iou = True
     save_inference_samples = True
@@ -178,7 +194,7 @@ def run():
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
 
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=2, keep_checkpoint_every_n_hours=1)
         restore_path = tf.train.latest_checkpoint('./ckpts/')
         if restore_path and restore_model:
             print("Resotring model from: %s " % restore_path)
@@ -186,7 +202,7 @@ def run():
 
         if training:
             train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
-                     correct_label, keep_prob, learning_rate)
+                     correct_label, keep_prob, learning_rate, saver)
 
         #compute mean_iou on traning images
         if compute_iou:
@@ -200,10 +216,6 @@ def run():
                 mean_ious.append(sess.run(mean_iou))
             print("Mean IOU: {:.3f}".format(sum(mean_ious) / len(mean_ious)))
 
-        if save_model:
-            save_path = saver.save(sess, "./ckpts/model.ckpt")
-            print("Model saved in path: %s" % save_path)
-
         if save_inference_samples:
             print("Saving inference samples...")
             helper.save_inference_samples(
@@ -211,23 +223,24 @@ def run():
 
         print("Processing test images...")
         processor = ImageProcessor.ImageProcessor(
-           image_shape, sess, logits, keep_prob, input_image)
+            image_shape, sess, logits, keep_prob, input_image)
         for idx, image_file in enumerate(glob("./test_images/*.jpg")):
             image = scipy.misc.imread(image_file)
             image = processor.process_image(image)
             scipy.misc.imsave(os.path.join(
                 "output_images", str(idx) + ".png"), image)
-        
-        print("Processing test video...")    
+
+        print("Processing test video...")
         videoname = 'test_video'
         output_file = videoname + '_output.mp4'
-        input_file  = videoname + '.mp4'
-        
+        input_file = videoname + '.mp4'
+
         clip = VideoFileClip(input_file)
         video_clip = clip.fl_image(processor.process_image)
         video_clip.write_videofile(output_file, audio=False)
-        
+
         print("Done.")
+
 
 if __name__ == '__main__':
     run()
