@@ -11,6 +11,19 @@ Make sure you have the following is installed:
  - [TensorFlow](https://www.tensorflow.org/)
  - [NumPy](http://www.numpy.org/)
  - [SciPy](https://www.scipy.org/)
+
+This project uses MoviePy to pocess video. If this is your first time running MoviePy, and you get FFmpeg error, locate the following:
+
+```python 
+from moviepy.editor import VideoFileClip
+```
+and add this above. It only needed to be done once.
+
+```python
+import imageio
+imageio.plugins.ffmpeg.download()
+```
+
 ##### Dataset
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
 
