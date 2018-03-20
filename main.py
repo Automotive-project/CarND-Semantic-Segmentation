@@ -1,9 +1,12 @@
 import os.path
 import tensorflow as tf
 import helper
+import ImageProcessor
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
+import scipy.misc
+from glob import glob
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion(
@@ -136,6 +139,7 @@ def run():
     restore_model = True
     inferance_only = False
     compute_iou = True
+    save_inference_samples = True
 
     num_classes = 2
     image_shape = (160, 576)
@@ -198,8 +202,21 @@ def run():
             save_path = saver.save(sess, "./ckpts/model.ckpt")
             print("Model saved in path: %s" % save_path)
 
-        helper.save_inference_samples(
-            runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        if save_inference_samples:
+            print("Saving inference samples...")
+            helper.save_inference_samples(
+                runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+
+        print("Processing test images...")
+        processor = ImageProcessor.ImageProcessor(
+           image_shape, sess, logits, keep_prob, input_image)
+        for idx, image_file in enumerate(glob("./test_images/*.jpg")):
+            image = scipy.misc.imresize(
+                scipy.misc.imread(image_file), image_shape)
+            image = processor.process_image(image)
+            scipy.misc.imsave(os.path.join(
+                "output_images", str(idx) + ".png"), image)
+        print("Done.")
 
 
 if __name__ == '__main__':
