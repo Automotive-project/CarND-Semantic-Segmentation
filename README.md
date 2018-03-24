@@ -25,7 +25,11 @@ imageio.plugins.ffmpeg.download()
 ```
 
 ##### Dataset
+###### Kitti
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
+
+###### Cityscape
+Register at [The Cityscapes Dataset](https://www.cityscapes-dataset.com/downloads/). Download gtFine_trainvaltest.zip and leftImg8bit_trainvaltest.zip. Extrac both to `data` folder such that you have `data/gtFine` and `datas/leftImg8bit`.
 
 ### Start
 ##### Run
@@ -33,7 +37,7 @@ Run the following command to run the project:
 ```
 python main.py
 ```
-##### Results
+##### Kitti Results
 
 ###### Mean IOU: 0.960
 
@@ -45,4 +49,13 @@ python main.py
 #### Tips
 - The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
 - The model is not vanilla `VGG16`, but a fully convolutional version, which already contains the 1x1 convolutions to replace the fully connected layers.
+
+#### Attribution
+###### Datasets
+[Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php)
+
+[The Cityscapes Dataset](https://www.cityscapes-dataset.com/downloads/)
+
+###### Cityscape helper scripts: 
+https://github.com/mcordts/cityscapesScripts 
  

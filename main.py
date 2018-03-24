@@ -144,7 +144,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
                 [train_op, cross_entropy_loss], feed_dict={input_image: image, correct_label: label,
                                                            keep_prob: 0.5, learning_rate: 1e-4})
         print('Epoch: {} loss: {:.3f}'.format(step + 1, loss))
-        if saver and step % 5 == 0:
+        if saver:
             saver.save(sess, "./ckpts/model.ckpt", global_step=step)
 
 
@@ -158,11 +158,14 @@ def run():
     training = True
     compute_iou = True
     save_inference_samples = True
+    do_exteranl_tests = True
 
-    num_classes = 2
     image_shape = (160, 576)
     data_dir = './data'
     runs_dir = './runs'
+    # Change following to switch datasets
+    dataset = helper.KittiDataset(data_dir, image_shape)
+    num_classes = dataset.get_num_classes()
     tests.test_for_kitti_dataset(data_dir)
 
     # Download pretrained vgg model
@@ -176,8 +179,7 @@ def run():
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
         # Create function to get batches
-        get_batches_fn = helper.gen_batch_function(
-            os.path.join(data_dir, 'data_road/training'), image_shape)
+        get_batches_fn = dataset.gen_batch_function()
 
         input_image, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(
             sess, vgg_path)
@@ -201,6 +203,7 @@ def run():
             saver.restore(sess, restore_path)
 
         if training:
+            print("Training...")
             train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
                      correct_label, keep_prob, learning_rate, saver)
 
@@ -218,26 +221,27 @@ def run():
 
         if save_inference_samples:
             print("Saving inference samples...")
-            helper.save_inference_samples(
-                runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+            dataset.save_inference_samples(
+                runs_dir, sess, logits, keep_prob, input_image)
 
-        print("Processing test images...")
-        processor = ImageProcessor.ImageProcessor(
-            image_shape, sess, logits, keep_prob, input_image)
-        for idx, image_file in enumerate(glob("./test_images/*.jpg")):
-            image = scipy.misc.imread(image_file)
-            image = processor.process_image(image)
-            scipy.misc.imsave(os.path.join(
-                "output_images", str(idx) + ".png"), image)
+        if do_exteranl_tests:
+            print("Processing test images...")
+            processor = ImageProcessor.ImageProcessor(
+                image_shape, sess, logits, keep_prob, input_image)
+            for idx, image_file in enumerate(glob("./test_images/*.jpg")):
+                image = scipy.misc.imread(image_file)
+                image = processor.process_image(image)
+                scipy.misc.imsave(os.path.join(
+                    "output_images", str(idx) + ".png"), image)
 
-        print("Processing test video...")
-        videoname = 'test_video'
-        output_file = videoname + '_output.mp4'
-        input_file = videoname + '.mp4'
+            print("Processing test video...")
+            videoname = 'test_video'
+            output_file = videoname + '_output.mp4'
+            input_file = videoname + '.mp4'
 
-        clip = VideoFileClip(input_file)
-        video_clip = clip.fl_image(processor.process_image)
-        video_clip.write_videofile(output_file, audio=False)
+            clip = VideoFileClip(input_file)
+            video_clip = clip.fl_image(processor.process_image)
+            video_clip.write_videofile(output_file, audio=False)
 
         print("Done.")
 

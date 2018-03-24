@@ -27,7 +27,9 @@ class ImageProcessor(object):
 
     # Video processing pipeline
     def process_image(self, image):
-
+        '''
+        Kitti support only
+        '''
         sess = self.sess
         logits = self.logits
         keep_prob = self.keep_prob
