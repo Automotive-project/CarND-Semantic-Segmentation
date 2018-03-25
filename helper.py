@@ -177,8 +177,8 @@ class CityscapeDataset(Dataset):
         self.data_folder = data_folder
         self.image_shape = image_shape
 
-        self.label_colors = {i: np.array(l.color)
-                             for i, l in enumerate(cityscape_labels.labels)}
+        self.gt_colors = {label: np.array(gt.color)
+                          for label, gt in enumerate(cityscape_labels.labels)}
 
         combined_file_list = [[], [], []]
         sub_folders = ["train", "val", "test"]
@@ -265,7 +265,7 @@ class CityscapeDataset(Dataset):
         """
         files = self.test_list
         image_shape = self.image_shape
-        paints = self.label_colors
+        paints = self.gt_colors
 
         for file in files:
             image = scipy.misc.imresize(
