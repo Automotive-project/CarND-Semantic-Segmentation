@@ -176,7 +176,6 @@ class CityscapeDataset(Dataset):
         '''
         self.data_folder = data_folder
         self.image_shape = image_shape
-
         self.gt_colors = {label: np.array(gt.color)
                           for label, gt in enumerate(cityscape_labels.labels)}
 
