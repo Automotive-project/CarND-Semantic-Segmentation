@@ -48,14 +48,14 @@ python main.py
 
 ##### Cityscape Results
 
-![sample](./runs/1521974760.190023/munich_000149_000019_leftImg8bit.png)
-![sample](./runs/1521974760.190023/munich_000159_000019_leftImg8bit.png)
-![sample](./runs/1521974760.190023/munich_000160_000019_leftImg8bit.png)
-![sample](./runs/1521974760.190023/munich_000164_000019_leftImg8bit.png)
+![sample](./images/1521974760.190023/munich_000149_000019_leftImg8bit.png)
+![sample](./images/1521974760.190023/munich_000159_000019_leftImg8bit.png)
+![sample](./images/1521974760.190023/munich_000160_000019_leftImg8bit.png)
+![sample](./images/1521974760.190023/munich_000164_000019_leftImg8bit.png)
 
 ##### Cross-entropy Loss
 
-![sample](./runs/kitti-loss.png)
+![sample](./images/kitti-loss.png)
 
 #### Tips
 - The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
