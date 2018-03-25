@@ -46,6 +46,13 @@ python main.py
 ![sample](./runs/1521580880.289971/um_000007.png)
 ![sample](./runs/1521580880.289971/um_000013.png)
 
+##### Cityscape Results
+
+![sample](./runs/1521974760.190023/munich_000149_000019_leftImg8bit.png)
+![sample](./runs/1521974760.190023/munich_000159_000019_leftImg8bit.png)
+![sample](./runs/1521974760.190023/munich_000160_000019_leftImg8bit.png)
+![sample](./runs/1521974760.190023/munich_000164_000019_leftImg8bit.png)
+
 #### Tips
 - The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
 - The model is not vanilla `VGG16`, but a fully convolutional version, which already contains the 1x1 convolutions to replace the fully connected layers.
