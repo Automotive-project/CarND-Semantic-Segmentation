@@ -43,6 +43,7 @@ I tried classical data augmentation techniques, by randomly mirroring and jitter
 Eventually I end up with 10k+ images trained on 200+ epochs, with following scores:
 
 | Car F score: 0.778          | Car Precision: 0.914  | Car Recall: 0.751  |
+|-----------------------------| --------------------- | -------------------|
 | Road F score: 0.987         | Road Precision: 0.998 | Road Recall: 0.944 |
 | **Averaged F score: 0.883** |                       |                    |
 
@@ -178,8 +179,9 @@ This give me a whopping 16.6 fps.
 I used Adam optimizer with minibatch size of 13 and learning rate of 1e-4. keep_prob was increased gradually from .5 to 1.0 during training.
 
 ## Training Data
-| Official         | https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/Lyft_Challenge/Training+Data/lyft_training_data.tar.gz | 1000                  |
+| Source         | Link | count                  |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Official         | https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/Lyft_Challenge/Training+Data/lyft_training_data.tar.gz | 1000                  |
 | chinkiat         | https://github.com/ongchinkiat/LyftPerceptionChallenge/releases/                                                 | 3000                  |
 | Mohamed Eltohamy | https://drive.google.com/open?id=1NimO26IH_Y8DziDMsgBCZeHlT3duj4-e                                               | 1000                  |
 | phmagic          | https://www.dropbox.com/s/1etgf32uye2iy8q/world_2_w_cars.tar.gz?dl=0                                             | 2535 (after cleaning) |
@@ -196,22 +198,30 @@ I set aside 200 images as validation set.
 # Acknowledgements
 - Ong Chin-Kiat (chinkiat), Phu Nguyen (phmagic), and Mohamed Eltohamy shared extra training data from CARLA.
 - Phu Nguyen (phmagic) shared a nice tip that OpenCV was faster than PIL for encoding to PNG format. 
+
 # Appendix B - Other Dataset support
 ## Datasets
 
-To switch datasets, look at the start of run() in main.py and replace helper.KittiDataset with for exmaple  helper.LyftData
+To switch datasets, look at the start of run() in main.py and replace helper.KittiDataset with for exmaple helper.LyftData
+
 **Kitti**
+
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip). Extract the dataset in the `data` folder. This will create the folder `data_road` with all the training a test images.
+
 **Cityscape**
+
 Register at [The Cityscapes Dataset](https://www.cityscapes-dataset.com/downloads/). Download gtFine_trainvaltest.zip and leftImg8bit_trainvaltest.zip. Extrac both to `data`folder such that you have `data/gtFine` and `datas/leftImg8bit`.
+
 **kitti2015**
+
 Download data_semantics.zip and provide path to the folder containing *image_2*.
+
 **Robust Vision Challenge**
+
 Download and setup devkit and provide path to rob_devkit/segmentation/datasets_kitti2015 it brings in additional support for following datasets.
 
 - [WildDash](http://wilddash.cc/)
 - [ScanNet](http://www.scan-net.org/)
-## Start
 
 **Run**
 Run the following command to run the project:
