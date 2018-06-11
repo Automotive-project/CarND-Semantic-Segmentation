@@ -34,7 +34,7 @@ I modified my FCN Cityscapes implementation to restrict detection to :
 - Background
 
 I took the initial 1000 training images made available to us and trained for 40 epoch. 
-The result was an Average F score ****0.81 and FPS of 5. This established that the training datasheet is in correct format and there are no bugs in the implementation.
+The result was an Average F score 0.81 and FPS of 5. This established that the training datasheet is in correct format and there are no bugs in the implementation.
 
 # Improving F Score
 
@@ -43,7 +43,6 @@ I tried classical data augmentation techniques, by randomly mirroring and jitter
 Eventually I end up with 10k+ images trained on 200+ epochs, with following scores:
 
 | Car F score: 0.778          | Car Precision: 0.914  | Car Recall: 0.751  |
-| --------------------------- | --------------------- | ------------------ |
 | Road F score: 0.987         | Road Precision: 0.998 | Road Recall: 0.944 |
 | **Averaged F score: 0.883** |                       |                    |
 
