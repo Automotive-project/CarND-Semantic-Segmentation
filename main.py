@@ -8,6 +8,8 @@ import project_tests as tests
 import scipy.misc
 from glob import glob
 from moviepy.editor import VideoFileClip
+import time
+import timeit
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion(
@@ -122,12 +124,11 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
 tests.test_optimize(optimize)
 
 
-def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
+def train_nn(sess, step, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
              correct_label, keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
-    :param epochs: Number of epochs
     :param batch_size: Batch size
     :param get_batches_fn: Function to get batches of training data.  Call using get_batches_fn(batch_size)
     :param train_op: TF Operation to train the neural network
@@ -138,27 +139,30 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
 
-    for step in range(epochs):
-        for image, label in (get_batches_fn(batch_size)):
-            _, loss = sess.run(
-                [train_op, cross_entropy_loss], feed_dict={input_image: image, correct_label: label,
-                                                           keep_prob: 0.5, learning_rate: 1e-4})
+    for image, label in (get_batches_fn(batch_size)):
+        _, loss = sess.run(
+            [train_op, cross_entropy_loss], feed_dict={input_image: image, correct_label: label,
+                                                       keep_prob: 1.0, learning_rate: 1e-4})
         print('Epoch: {} loss: {:.3f}'.format(step + 1, loss))
-        if saver:
-            saver.save(sess, "./ckpts/model.ckpt", global_step=step)
+        
+    if saver:
+        saver.save(sess, "./ckpts/model.ckpt", global_step=step)
+        
+    return loss
 
 
-tests.test_train_nn(train_nn)
+#tests.test_train_nn(train_nn)
 
 
 def run():
-    batches = 8
+    batches = 13
     epochs = 80
-    restore_model = False
+    restore_model = True
     training = True
     compute_iou = True
     save_inference_samples = True
-    do_exteranl_tests = True
+    do_exteranl_tests = False
+    save_graph = True
 
     image_shape = (160, 576)
     data_dir = './data'
@@ -202,10 +206,19 @@ def run():
             print("Resotring model from: %s " % restore_path)
             saver.restore(sess, restore_path)
 
-        if training:
-            print("Training...")
-            train_nn(sess, epochs, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
-                     correct_label, keep_prob, learning_rate, saver)
+        for step in range(epochs):
+            if training:
+                print("Training...")
+                start_time = timeit.default_timer()
+                loss = train_nn(sess, step, batches, get_batches_fn, optimizer, cross_entropy_loss, input_image,
+                         correct_label, keep_prob, learning_rate, saver)
+                elapsed = timeit.default_timer() - start_time
+                print('Epoch: {} loss: {:.3f} time: {:.3f}'.format(step + 1, loss, elapsed))
+    
+            if save_inference_samples:
+                print("Saving inference samples...")
+                dataset.save_inference_samples(
+                    runs_dir, sess, logits, keep_prob, input_image)
 
         #compute mean_iou on traning images
         if compute_iou:
@@ -218,12 +231,7 @@ def run():
                 # http://ronny.rest/blog/post_2017_09_11_tf_metrics/
                 mean_ious.append(sess.run(mean_iou))
             print("Mean IOU: {:.3f}".format(sum(mean_ious) / len(mean_ious)))
-
-        if save_inference_samples:
-            print("Saving inference samples...")
-            dataset.save_inference_samples(
-                runs_dir, sess, logits, keep_prob, input_image)
-
+            
         if do_exteranl_tests:
             print("Processing test images...")
             processor = ImageProcessor.ImageProcessor(
@@ -243,6 +251,11 @@ def run():
             video_clip = clip.fl_image(processor.process_image)
             video_clip.write_videofile(output_file, audio=False)
 
+        if save_graph:
+            print("Saving graph...")
+            # Save GraphDef
+            tf.train.write_graph(sess.graph_def,'.','graph.pb', as_text=False)
+        
         print("Done.")
 
 
